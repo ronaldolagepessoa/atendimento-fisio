@@ -1,0 +1,241 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Auth ────────────────────────────────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model User {
+  id       String   @id @default(cuid())
+  email    String   @unique
+  name     String?
+  password String?
+  role     Role     @default(FISIO)
+  ativo    Boolean  @default(true)
+
+  fisio    Fisioterapeuta? @relation(fields: [fisioId], references: [id])
+  fisioId  String?
+
+  accounts Account[]
+  sessions Session[]
+
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  ADMIN
+  FISIO
+}
+
+// ─── Domínio ─────────────────────────────────────────────────────────────────
+
+model Fisioterapeuta {
+  id    String  @id @default(cuid())
+  nome  String
+  email String  @unique
+  cref  String?
+  cor   String  @default("#6366f1")
+  ativo Boolean @default(true)
+
+  users          User[]
+  pacienteFisios PacienteFisio[]
+  agendamentos   Agendamento[]
+  frequencias    FrequenciaAgendamento[]
+  tapings        Taping[]
+
+  createdAt DateTime @default(now())
+}
+
+model Paciente {
+  id             String    @id @default(cuid())
+  nome           String
+  telefone       String
+  cpf            String?   @unique
+  dataNascimento DateTime?
+  observacoes    String?   @db.Text
+
+  pacienteFisios PacienteFisio[]
+  agendamentos   Agendamento[]
+  frequencias    FrequenciaAgendamento[]
+  pacotes        PacoteSessoes[]
+  pagamentos     Pagamento[]
+  tapings        Taping[]
+
+  createdAt DateTime @default(now())
+}
+
+model PacienteFisio {
+  id               String @id @default(cuid())
+  corPersonalizada String @default("#6366f1")
+
+  paciente   Paciente       @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  pacienteId String
+  fisio      Fisioterapeuta @relation(fields: [fisioId], references: [id], onDelete: Cascade)
+  fisioId    String
+
+  @@unique([pacienteId, fisioId])
+}
+
+model Procedimento {
+  id        String  @id @default(cuid())
+  nome      String
+  valor     Decimal @db.Decimal(10, 2)
+  descricao String? @db.Text
+  ativo     Boolean @default(true)
+
+  agendamentos Agendamento[]
+
+  createdAt DateTime @default(now())
+}
+
+model PacoteSessoes {
+  id            String       @id @default(cuid())
+  totalSessoes  Int
+  sessoesUsadas Int          @default(0)
+  dataInicio    DateTime
+  validadeDias  Int          @default(40)
+  dataExpiracao DateTime
+  valorTotal    Decimal      @db.Decimal(10, 2)
+  status        StatusPacote @default(ATIVO)
+
+  paciente   Paciente @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  pacienteId String
+
+  agendamentos Agendamento[]
+  pagamentos   Pagamento[]
+
+  createdAt DateTime @default(now())
+}
+
+enum StatusPacote {
+  ATIVO
+  EXPIRADO
+  ESGOTADO
+}
+
+model FrequenciaAgendamento {
+  id         String   @id @default(cuid())
+  diasSemana Int[]
+  horario    String
+  dataInicio DateTime
+  dataFim    DateTime
+  descricao  String?
+
+  paciente   Paciente       @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  pacienteId String
+  fisio      Fisioterapeuta @relation(fields: [fisioId], references: [id], onDelete: Cascade)
+  fisioId    String
+
+  agendamentos Agendamento[]
+
+  createdAt DateTime @default(now())
+}
+
+model Agendamento {
+  id                 String            @id @default(cuid())
+  dataHora           DateTime
+  status             StatusAgendamento @default(AGENDADO)
+  notificacaoEnviada Boolean           @default(false)
+
+  paciente       Paciente       @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  pacienteId     String
+  fisio          Fisioterapeuta @relation(fields: [fisioId], references: [id], onDelete: Cascade)
+  fisioId        String
+  procedimento   Procedimento   @relation(fields: [procedimentoId], references: [id])
+  procedimentoId String
+
+  pacote       PacoteSessoes?         @relation(fields: [pacoteId], references: [id])
+  pacoteId     String?
+  frequencia   FrequenciaAgendamento? @relation(fields: [frequenciaId], references: [id])
+  frequenciaId String?
+
+  pagamento Pagamento?
+
+  createdAt DateTime @default(now())
+}
+
+enum StatusAgendamento {
+  AGENDADO
+  REALIZADO
+  CANCELADO
+  FALTOU
+}
+
+model Pagamento {
+  id            String         @id @default(cuid())
+  valor         Decimal        @db.Decimal(10, 2)
+  forma         FormaPagamento
+  dataPagamento DateTime       @default(now())
+  observacao    String?        @db.Text
+
+  paciente   Paciente @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  pacienteId String
+
+  agendamento   Agendamento? @relation(fields: [agendamentoId], references: [id])
+  agendamentoId String?      @unique
+
+  pacote   PacoteSessoes? @relation(fields: [pacoteId], references: [id])
+  pacoteId String?
+
+  createdAt DateTime @default(now())
+}
+
+enum FormaPagamento {
+  DINHEIRO
+  PIX
+  CARTAO
+  TRANSFERENCIA
+}
+
+model Taping {
+  id            String   @id @default(cuid())
+  regiaCorporal String
+  dataAplicacao DateTime
+  dataRetirada  DateTime
+  retirado      Boolean  @default(false)
+
+  paciente   Paciente       @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  pacienteId String
+  fisio      Fisioterapeuta @relation(fields: [fisioId], references: [id], onDelete: Cascade)
+  fisioId    String
+
+  createdAt DateTime @default(now())
+}
