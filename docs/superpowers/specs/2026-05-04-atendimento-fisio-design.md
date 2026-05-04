@@ -34,7 +34,9 @@ Dockerfile multi-stage: build Next.js → imagem enxuta → Railway faz deploy a
 
 ### 1. Autenticação
 - Login por email e senha (NextAuth.js)
-- Dois roles: **admin** (recepcionista — acesso total) e **fisio** (acesso à agenda própria + pacientes)
+- Dois roles:
+  - **admin** (recepcionista) — acesso total: cria, edita e cancela agendamentos, cadastros, pagamentos e relatórios
+  - **fisio** — somente leitura: visualiza a agenda (todos os fisios) e o perfil dos pacientes, sem criar nem editar nada
 - Sessão persistente via JWT
 
 ### 2. Pacientes
