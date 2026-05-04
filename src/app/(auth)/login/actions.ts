@@ -13,6 +13,11 @@ export async function loginAction(formData: FormData) {
     if (error instanceof AuthError) {
       return { error: "Email ou senha incorretos." };
     }
-    throw error;
+    // Re-throw NEXT_REDIRECT (used by Next.js redirect()) — it's not an error
+    if ((error as { digest?: string })?.digest?.startsWith("NEXT_REDIRECT")) {
+      throw error;
+    }
+    console.error("Login error:", error);
+    return { error: "Erro ao processar login. Tente novamente." };
   }
 }
