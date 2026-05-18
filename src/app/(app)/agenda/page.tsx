@@ -51,8 +51,15 @@ export default async function AgendaPage({
 
   // Serializar DateTime → string antes de passar ao client component
   const agendamentosSer = agendamentos.map((a) => ({
-    ...a,
+    id: a.id,
     dataHora: a.dataHora.toISOString(),
+    status: a.status,
+    notificacaoEnviada: a.notificacaoEnviada,
+    pacoteId: a.pacoteId,
+    frequenciaId: a.frequenciaId,
+    paciente: a.paciente,
+    fisio: a.fisio,
+    procedimento: a.procedimento,
   }));
 
   return (
