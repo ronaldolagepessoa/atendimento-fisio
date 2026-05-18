@@ -3,7 +3,6 @@ import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { Role } from "@prisma/client";
 import { authConfig } from "@/auth.config";
 
 const DUMMY_HASH = "$2b$12$dummy.hash.to.prevent.timing.attack.padding";
@@ -28,6 +27,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const user = await prisma.user.findUnique({
           where: { email },
+          include: { role: { select: { nome: true, permissoes: true } } },
         });
 
         if (!user || !user.password) {
@@ -44,7 +44,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           id: user.id,
           email: user.email,
           name: user.name,
-          role: user.role,
+          role: user.role.nome,
+          permissions: user.role.permissoes,
           fisioId: user.fisioId ?? undefined,
         };
       },
@@ -53,14 +54,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = (user as { role: Role }).role;
+        token.role = (user as { role: string }).role;
+        token.permissions = (user as { permissions: string[] }).permissions;
         token.fisioId = (user as { fisioId?: string }).fisioId;
       }
       return token;
     },
     async session({ session, token }) {
-      session.user.role = token.role ?? Role.FISIO;
-      session.user.fisioId = token.fisioId as string | undefined;
+      session.user.role = token.role ?? "FISIO";
+      session.user.permissions = token.permissions ?? [];
+      session.user.fisioId = token.fisioId;
       return session;
     },
   },

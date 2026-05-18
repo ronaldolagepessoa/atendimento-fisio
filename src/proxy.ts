@@ -4,13 +4,6 @@ import { NextResponse } from "next/server";
 
 const { auth } = NextAuth(authConfig);
 
-const ADMIN_ONLY_ROUTES = [
-  "/pagamentos",
-  "/relatorios",
-  "/procedimentos",
-  "/fisios",
-];
-
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
   const isAuthRoute = req.nextUrl.pathname.startsWith("/login");
@@ -27,11 +20,13 @@ export default auth((req) => {
   }
 
   const role = req.auth?.user?.role;
-  if (role === "FISIO") {
-    const blocked = ADMIN_ONLY_ROUTES.some((r) =>
-      req.nextUrl.pathname.startsWith(r)
-    );
-    if (blocked) {
+  const permissions: string[] = req.auth?.user?.permissions ?? [];
+
+  if (role !== "ADMIN") {
+    const allowed =
+      req.nextUrl.pathname === "/agenda" ||
+      permissions.some((p) => req.nextUrl.pathname.startsWith(p));
+    if (!allowed) {
       return NextResponse.redirect(new URL("/agenda", req.url));
     }
   }

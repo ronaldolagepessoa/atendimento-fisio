@@ -10,7 +10,6 @@ export const authConfig: NextAuthConfig = {
         email: { label: "Email", type: "email" },
         password: { label: "Senha", type: "password" },
       },
-      // authorize runs only in the Node.js context (auth.ts), not here
       authorize: () => null,
     }),
   ],
@@ -20,14 +19,16 @@ export const authConfig: NextAuthConfig = {
     },
     async jwt({ token, user }) {
       if (user) {
-        token.role = (user as { role: "ADMIN" | "FISIO" }).role;
+        token.role = (user as { role: string }).role;
+        token.permissions = (user as { permissions: string[] }).permissions;
         token.fisioId = (user as { fisioId?: string }).fisioId;
       }
       return token;
     },
     async session({ session, token }) {
-      session.user.role = (token.role as "ADMIN" | "FISIO") ?? "FISIO";
-      session.user.fisioId = token.fisioId as string | undefined;
+      session.user.role = token.role ?? "FISIO";
+      session.user.permissions = token.permissions ?? [];
+      session.user.fisioId = token.fisioId;
       return session;
     },
   },
