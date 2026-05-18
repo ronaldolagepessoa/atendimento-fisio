@@ -8,6 +8,7 @@ import type { AgendamentoSer, Paciente, Fisio, Procedimento, Pacote } from "./Ag
 
 type Props = {
   agendamento?: AgendamentoSer;
+  defaultDataHora?: string;  // "YYYY-MM-DDTHH:MM" BRT-local, pré-preenche data+hora
   pacientes: Paciente[];
   fisios: Fisio[];
   procedimentos: Procedimento[];
@@ -19,6 +20,7 @@ type ActionResult = { success?: boolean; error?: string } | null;
 
 export function AgendamentoModal({
   agendamento,
+  defaultDataHora,
   pacientes,
   fisios,
   procedimentos,
@@ -52,7 +54,11 @@ export function AgendamentoModal({
     if (state?.success) onClose();
   }, [state, onClose]);
 
-  const brtInputs = agendamento ? isoToBRTInputs(agendamento.dataHora) : null;
+  const brtInputs = agendamento
+    ? isoToBRTInputs(agendamento.dataHora)
+    : defaultDataHora
+      ? { date: defaultDataHora.slice(0, 10), time: defaultDataHora.slice(11, 16) }
+      : null;
   const filteredPacotes = pacotes.filter((p) => p.pacienteId === selectedPacienteId);
 
   async function handleDelete() {
