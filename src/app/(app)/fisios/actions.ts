@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth-guard";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
+import { Prisma } from "@prisma/client";
 
 export async function createFisio(formData: FormData) {
   await requireAdmin();
@@ -35,7 +36,7 @@ export async function createFisio(formData: FormData) {
       });
     });
   } catch (e: unknown) {
-    if ((e as { code?: string }).code === "P2002") {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
       return { error: "Email já cadastrado." };
     }
     return { error: "Erro ao criar fisioterapeuta." };
@@ -69,7 +70,7 @@ export async function updateFisio(id: string, formData: FormData) {
       });
     });
   } catch (e: unknown) {
-    if ((e as { code?: string }).code === "P2002") {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
       return { error: "Email já cadastrado." };
     }
     return { error: "Erro ao atualizar fisioterapeuta." };
@@ -87,10 +88,14 @@ export async function toggleFisioAtivo(id: string) {
 
   const novoAtivo = !fisio.ativo;
 
-  await prisma.$transaction(async (tx) => {
-    await tx.fisioterapeuta.update({ where: { id }, data: { ativo: novoAtivo } });
-    await tx.user.updateMany({ where: { fisioId: id }, data: { ativo: novoAtivo } });
-  });
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.fisioterapeuta.update({ where: { id }, data: { ativo: novoAtivo } });
+      await tx.user.updateMany({ where: { fisioId: id }, data: { ativo: novoAtivo } });
+    });
+  } catch {
+    return { error: "Erro ao atualizar fisioterapeuta." };
+  }
 
   revalidatePath("/fisios");
   return { success: true };
