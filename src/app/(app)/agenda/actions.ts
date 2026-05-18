@@ -56,9 +56,32 @@ export async function updateAgendamento(id: string, formData: FormData) {
   const dataHora = new Date(`${data}T${hora}:00.000-03:00`);
 
   try {
-    await prisma.agendamento.update({
-      where: { id },
-      data: { pacienteId, fisioId, procedimentoId, pacoteId, dataHora, status },
+    await prisma.$transaction(async (tx) => {
+      const current = await tx.agendamento.findUnique({
+        where: { id },
+        select: { status: true, pacoteId: true },
+      });
+
+      await tx.agendamento.update({
+        where: { id },
+        data: { pacienteId, fisioId, procedimentoId, pacoteId, dataHora, status },
+      });
+
+      // Increment: changing TO REALIZADO, FROM non-REALIZADO, with new pacoteId
+      if (status === "REALIZADO" && current?.status !== "REALIZADO" && pacoteId) {
+        await tx.pacoteSessoes.update({
+          where: { id: pacoteId },
+          data: { sessoesUsadas: { increment: 1 } },
+        });
+      }
+
+      // Decrement: changing FROM REALIZADO, with existing pacoteId on old record
+      if (current?.status === "REALIZADO" && status !== "REALIZADO" && current?.pacoteId) {
+        await tx.pacoteSessoes.update({
+          where: { id: current.pacoteId },
+          data: { sessoesUsadas: { decrement: 1 } },
+        });
+      }
     });
   } catch {
     return { error: "Erro ao atualizar agendamento." };

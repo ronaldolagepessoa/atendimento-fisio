@@ -5,7 +5,7 @@ import { useActionState, useCallback, useEffect, useRef } from "react";
 import { createPacote, updatePacote, deletePacote } from "./actions";
 import { PacoteSer } from "./PacotesClient";
 
-type ActionResult = { error: string } | { success: true } | null;
+type ActionResult = { error: string } | { success: boolean } | null;
 type Paciente = { id: string; nome: string };
 
 type Props = {

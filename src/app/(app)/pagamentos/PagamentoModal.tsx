@@ -5,7 +5,7 @@ import { useActionState, useCallback, useEffect, useRef, useState } from "react"
 import { createPagamento, updatePagamento, deletePagamento } from "./actions";
 import { PagamentoSer } from "./PagamentosClient";
 
-type ActionResult = { error: string } | { success: true } | null;
+type ActionResult = { error: string } | { success: boolean } | null;
 type Paciente = { id: string; nome: string };
 type AgendamentoLink = { id: string; dataHora: string; pacienteId: string; procedimento: { nome: string } };
 type PacoteLink = { id: string; pacienteId: string; totalSessoes: number; dataInicio: string };
