@@ -64,3 +64,27 @@ export function isoToBRTInputs(iso: string): { date: string; time: string } {
     time: d.toISOString().slice(11, 16),
   };
 }
+
+/**
+ * Converte ISO UTC timestamp para índice de slot (0 = 07:00, 1 = 07:30, … 21 = 17:30).
+ * Retorna -1 se fora do intervalo 07:00–17:59 BRT.
+ * Usa UTC-3 fixo (sem ajuste de horário de verão), consistente com isoToBRTInputs.
+ */
+export function slotIndex(iso: string): number {
+  const brt = new Date(new Date(iso).getTime() - 3 * 60 * 60 * 1000);
+  const h = brt.getUTCHours();
+  const m = brt.getUTCMinutes();
+  if (h < 7 || h >= 18) return -1;
+  return (h - 7) * 2 + (m >= 30 ? 1 : 0);
+}
+
+/**
+ * Converte índice de slot + data ISO (YYYY-MM-DD) em string "YYYY-MM-DDTHH:MM" em BRT-local.
+ * Usada para pré-preencher o modal ao clicar em slot vazio.
+ * Ex: slotToLocalISO("2025-05-20", 4) → "2025-05-20T09:00"
+ */
+export function slotToLocalISO(dayISO: string, slotIdx: number): string {
+  const hour = 7 + Math.floor(slotIdx / 2);
+  const minutes = (slotIdx % 2) * 30;
+  return `${dayISO}T${String(hour).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
