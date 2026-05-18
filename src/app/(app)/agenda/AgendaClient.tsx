@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   getWeekStart,
@@ -122,8 +122,11 @@ export function AgendaClient({
 
   // Indicador de hora atual — atualiza a cada minuto
   useEffect(() => {
+    if (!isCurrentWeek) {
+      setNowSlot(null);
+      return;
+    }
     const update = () => {
-      if (!isCurrentWeek) { setNowSlot(null); return; }
       const brt = new Date(Date.now() - 3 * 60 * 60 * 1000);
       const h = brt.getUTCHours();
       const m = brt.getUTCMinutes();
@@ -230,7 +233,7 @@ export function AgendaClient({
 
           {/* Linhas de horário */}
           {TIME_SLOTS.map((slot, si) => (
-            <>
+            <React.Fragment key={si}>
               {/* Rótulo de hora */}
               <div
                 key={`tl-${si}`}
@@ -334,7 +337,7 @@ export function AgendaClient({
                   </div>
                 );
               })}
-            </>
+            </React.Fragment>
           ))}
         </div>
       </div>
