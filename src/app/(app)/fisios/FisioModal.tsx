@@ -87,6 +87,19 @@ export function FisioModal({ fisio, onClose }: Props) {
             />
           </div>
 
+          <div>
+            <label className="mb-1 block text-sm font-medium text-zinc-700">
+              Senha {!fisio && <span className="text-red-500">*</span>}
+            </label>
+            <input
+              name="senha"
+              type="password"
+              required={!fisio}
+              placeholder={fisio ? "Deixe em branco para manter a senha atual" : ""}
+              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
           {state && "error" in state && (
             <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
               {state.error}

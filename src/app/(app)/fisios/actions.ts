@@ -6,6 +6,8 @@ import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
 import { Prisma } from "@prisma/client";
 
+const FISIO_ROLE_ID = "role-fisio";
+
 export async function createFisio(formData: FormData) {
   await requireAdmin();
 
@@ -13,12 +15,16 @@ export async function createFisio(formData: FormData) {
   const email = formData.get("email") as string;
   const cref = (formData.get("cref") as string) || null;
   const cor = (formData.get("cor") as string) || "#6366f1";
+  const senha = (formData.get("senha") as string)?.trim();
 
   if (!nome?.trim() || !email?.trim()) {
     return { error: "Nome e email são obrigatórios." };
   }
+  if (!senha) {
+    return { error: "Senha é obrigatória." };
+  }
 
-  const senhaHash = await bcrypt.hash(email, 12);
+  const senhaHash = await bcrypt.hash(senha, 12);
 
   try {
     await prisma.$transaction(async (tx) => {
@@ -30,7 +36,7 @@ export async function createFisio(formData: FormData) {
           name: nome.trim(),
           email: email.trim(),
           password: senhaHash,
-          role: "FISIO",
+          roleId: FISIO_ROLE_ID,
           fisioId: fisio.id,
         },
       });
@@ -53,9 +59,19 @@ export async function updateFisio(id: string, formData: FormData) {
   const email = formData.get("email") as string;
   const cref = (formData.get("cref") as string) || null;
   const cor = (formData.get("cor") as string) || "#6366f1";
+  const senha = (formData.get("senha") as string)?.trim() || null;
 
   if (!nome?.trim() || !email?.trim()) {
     return { error: "Nome e email são obrigatórios." };
+  }
+
+  const userUpdateData: {
+    name: string;
+    email: string;
+    password?: string;
+  } = { name: nome.trim(), email: email.trim() };
+  if (senha) {
+    userUpdateData.password = await bcrypt.hash(senha, 12);
   }
 
   try {
@@ -66,7 +82,7 @@ export async function updateFisio(id: string, formData: FormData) {
       });
       await tx.user.updateMany({
         where: { fisioId: id },
-        data: { name: nome.trim(), email: email.trim() },
+        data: userUpdateData,
       });
     });
   } catch (e: unknown) {
