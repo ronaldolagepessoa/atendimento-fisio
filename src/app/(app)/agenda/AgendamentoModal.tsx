@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useCallback, useEffect, useRef, useState } from "react";
 import { createAgendamento, updateAgendamento, deleteAgendamento } from "./actions";
 import { isoToBRTInputs } from "@/lib/agenda";
 import { cn } from "@/lib/utils";
@@ -30,10 +30,14 @@ export function AgendamentoModal({
     agendamento?.paciente.id ?? ""
   );
 
-  const wrappedCreate = async (_state: ActionResult, fd: FormData) =>
-    createAgendamento(fd);
-  const wrappedUpdate = async (_state: ActionResult, fd: FormData) =>
-    updateAgendamento(agendamento!.id, fd);
+  const wrappedCreate = useCallback(
+    (_state: ActionResult, fd: FormData) => createAgendamento(fd),
+    []
+  );
+  const wrappedUpdate = useCallback(
+    (_state: ActionResult, fd: FormData) => updateAgendamento(agendamento!.id, fd),
+    [agendamento]
+  );
 
   const [state, formAction, isPending] = useActionState(
     agendamento ? wrappedUpdate : wrappedCreate,
@@ -66,16 +70,18 @@ export function AgendamentoModal({
     <dialog
       ref={dialogRef}
       onClose={onClose}
+      aria-labelledby="agendamento-modal-title"
       className="m-auto rounded-xl shadow-2xl p-0 w-full max-w-lg backdrop:bg-black/40"
     >
       <form action={formAction} className="p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-zinc-900">
+          <h2 id="agendamento-modal-title" className="text-lg font-semibold text-zinc-900">
             {agendamento ? "Editar agendamento" : "Novo agendamento"}
           </h2>
           <button
             type="button"
             onClick={onClose}
+            aria-label="Fechar"
             className="text-zinc-400 hover:text-zinc-600 text-xl leading-none"
           >
             ✕

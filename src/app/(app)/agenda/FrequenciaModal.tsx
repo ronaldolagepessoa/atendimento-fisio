@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useCallback, useEffect, useRef } from "react";
 import { createFrequencia } from "./actions";
 import { cn } from "@/lib/utils";
 import type { Paciente, Fisio, Procedimento } from "./AgendaClient";
@@ -27,8 +27,10 @@ type ActionResult = { success?: boolean; error?: string; count?: number } | null
 export function FrequenciaModal({ pacientes, fisios, procedimentos, onClose }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
-  const wrappedAction = async (_state: ActionResult, fd: FormData) =>
-    createFrequencia(fd);
+  const wrappedAction = useCallback(
+    (_state: ActionResult, fd: FormData) => createFrequencia(fd),
+    []
+  );
 
   const [state, formAction, isPending] = useActionState(wrappedAction, null);
 
@@ -40,16 +42,18 @@ export function FrequenciaModal({ pacientes, fisios, procedimentos, onClose }: P
     <dialog
       ref={dialogRef}
       onClose={onClose}
+      aria-labelledby="frequencia-modal-title"
       className="m-auto rounded-xl shadow-2xl p-0 w-full max-w-lg backdrop:bg-black/40"
     >
       <form action={formAction} className="p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-zinc-900">
+          <h2 id="frequencia-modal-title" className="text-lg font-semibold text-zinc-900">
             Nova frequência recorrente
           </h2>
           <button
             type="button"
             onClick={onClose}
+            aria-label="Fechar"
             className="text-zinc-400 hover:text-zinc-600 text-xl leading-none"
           >
             ✕
