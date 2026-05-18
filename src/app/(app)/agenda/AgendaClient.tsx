@@ -122,10 +122,7 @@ export function AgendaClient({
 
   // Indicador de hora atual — atualiza a cada minuto
   useEffect(() => {
-    if (!isCurrentWeek) {
-      setNowSlot(null);
-      return;
-    }
+    if (!isCurrentWeek) return;
     const update = () => {
       const brt = new Date(Date.now() - 3 * 60 * 60 * 1000);
       const h = brt.getUTCHours();
