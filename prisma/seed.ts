@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { PrismaClient, Role } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 
@@ -8,7 +8,6 @@ if (!connectionString) {
   throw new Error("DATABASE_URL não definida. Configure no .env antes de rodar o seed.");
 }
 const adapter = new PrismaPg({ connectionString });
-
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
@@ -21,7 +20,7 @@ async function main() {
       email: "admin@clinica.com",
       name: "Admin",
       password: hash,
-      role: Role.ADMIN,
+      roleId: "role-admin",
     },
   });
 

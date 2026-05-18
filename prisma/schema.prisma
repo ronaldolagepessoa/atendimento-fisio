@@ -48,8 +48,10 @@ model User {
   email    String   @unique
   name     String?
   password String?
-  role     Role     @default(FISIO)
   ativo    Boolean  @default(true)
+
+  role    Role   @relation(fields: [roleId], references: [id])
+  roleId  String
 
   fisio    Fisioterapeuta? @relation(fields: [fisioId], references: [id])
   fisioId  String?
@@ -60,9 +62,13 @@ model User {
   createdAt DateTime @default(now())
 }
 
-enum Role {
-  ADMIN
-  FISIO
+model Role {
+  id         String   @id @default(cuid())
+  nome       String   @unique
+  permissoes String[] @default([])
+  sistema    Boolean  @default(false)
+  usuarios   User[]
+  criadoEm  DateTime @default(now())
 }
 
 // ─── Domínio ─────────────────────────────────────────────────────────────────
