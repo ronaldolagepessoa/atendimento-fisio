@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { CorFisioForm } from "./CorFisioForm";
 import { EditarPacienteBtn } from "./EditarPacienteBtn";
+import { PacotesSection } from "./PacotesSection";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -19,7 +20,7 @@ export default async function PacientePerfilPage({ params }: Props) {
   const session = await auth();
   const isAdmin = session?.user.role === "ADMIN";
 
-  const [paciente, fisios] = await Promise.all([
+  const [paciente, fisios, pacotesRaw] = await Promise.all([
     prisma.paciente.findUnique({
       where: { id },
       include: { pacienteFisios: true },
@@ -28,9 +29,25 @@ export default async function PacientePerfilPage({ params }: Props) {
       where: { ativo: true },
       orderBy: { nome: "asc" },
     }),
+    prisma.pacoteSessoes.findMany({
+      where: { pacienteId: id },
+      orderBy: { createdAt: "desc" },
+    }),
   ]);
 
   if (!paciente) notFound();
+
+  const pacotesSer = pacotesRaw.map((p) => ({
+    id: p.id,
+    totalSessoes: p.totalSessoes,
+    sessoesUsadas: p.sessoesUsadas,
+    dataInicio: p.dataInicio.toISOString(),
+    dataExpiracao: p.dataExpiracao.toISOString(),
+    validadeDias: p.validadeDias,
+    valorTotal: p.valorTotal.toNumber(),
+    pacienteId: p.pacienteId,
+    paciente: { id: paciente.id, nome: paciente.nome },
+  }));
 
   // Serialize Date to ISO string before passing to client component
   const pacienteParaBtn = {
@@ -127,10 +144,12 @@ export default async function PacientePerfilPage({ params }: Props) {
         </div>
       </div>
 
-      {/* Placeholder para histórico */}
-      <div className="rounded-xl border border-zinc-200 bg-white p-5 text-center text-sm text-zinc-400">
-        Histórico de sessões e pagamentos — disponível em breve.
-      </div>
+      <PacotesSection
+        pacotes={pacotesSer}
+        pacienteId={id}
+        pacienteNome={paciente.nome}
+        isAdmin={isAdmin}
+      />
     </div>
   );
 }
