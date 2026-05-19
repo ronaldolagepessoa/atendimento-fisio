@@ -24,7 +24,7 @@ export function UsuariosClient({ users, roles, currentUserId }: Props) {
   const handleToggleUser = (id: string) => {
     startTransition(async () => {
       const res = await toggleUserAtivo(id);
-      if ("error" in res) setFeedback(res.error);
+      if ("error" in res) setFeedback(res.error ?? null);
     });
   };
 
@@ -32,7 +32,7 @@ export function UsuariosClient({ users, roles, currentUserId }: Props) {
     if (!confirm(`Excluir o perfil "${nome}"?`)) return;
     startTransition(async () => {
       const res = await deleteRole(id);
-      if ("error" in res) setFeedback(res.error);
+      if ("error" in res) setFeedback(res.error ?? null);
     });
   };
 
