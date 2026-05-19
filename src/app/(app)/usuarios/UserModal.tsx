@@ -13,6 +13,8 @@ export type UserSer = {
   roleId: string;
   roleNome: string;
   fisioId: string | null;
+  cref: string | null;
+  cor: string | null;
 };
 
 type Props = {
@@ -96,6 +98,7 @@ export function UserModal({ user, roles, onClose }: Props) {
                 <label className="mb-1 block text-sm font-medium text-zinc-700">CREF</label>
                 <input
                   name="cref"
+                  defaultValue={user?.cref ?? ""}
                   className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
@@ -106,7 +109,7 @@ export function UserModal({ user, roles, onClose }: Props) {
                 <input
                   name="cor"
                   type="color"
-                  defaultValue="#6366f1"
+                  defaultValue={user?.cor ?? "#6366f1"}
                   className="h-10 w-full cursor-pointer rounded-lg border border-zinc-300 p-1"
                 />
               </div>

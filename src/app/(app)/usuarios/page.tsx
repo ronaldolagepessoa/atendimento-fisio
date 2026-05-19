@@ -9,7 +9,10 @@ export default async function UsuariosPage() {
 
   const [users, roles] = await Promise.all([
     prisma.user.findMany({
-      include: { role: { select: { id: true, nome: true } } },
+      include: {
+        role: { select: { id: true, nome: true } },
+        fisio: { select: { cref: true, cor: true } },
+      },
       orderBy: { createdAt: "asc" },
     }),
     prisma.role.findMany({
@@ -26,6 +29,8 @@ export default async function UsuariosPage() {
     roleId: u.roleId,
     roleNome: u.role.nome,
     fisioId: u.fisioId,
+    cref: u.fisio?.cref ?? null,
+    cor: u.fisio?.cor ?? null,
   }));
 
   const rolesSer = roles.map((r) => ({
