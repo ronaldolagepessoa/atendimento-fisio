@@ -10,6 +10,7 @@ declare module "next-auth" {
   }
   interface Session {
     user: {
+      id: string;
       role: string;
       permissions: string[];
       fisioId?: string;

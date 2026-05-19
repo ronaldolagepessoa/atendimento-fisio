@@ -60,6 +60,8 @@ export async function updateUser(id: string, formData: FormData) {
   const email = (formData.get("email") as string)?.trim();
   const roleId = (formData.get("roleId") as string)?.trim();
   const senha = (formData.get("senha") as string)?.trim() || null;
+  const cref = (formData.get("cref") as string)?.trim() || null;
+  const cor = (formData.get("cor") as string)?.trim() || null;
 
   if (!name || !email || !roleId) {
     return { error: "Nome, email e perfil são obrigatórios." };
@@ -79,7 +81,12 @@ export async function updateUser(id: string, formData: FormData) {
       if (user.fisioId) {
         await tx.fisioterapeuta.update({
           where: { id: user.fisioId },
-          data: { nome: name, email },
+          data: {
+            nome: name,
+            email,
+            ...(cref !== null && cref !== "" ? { cref } : {}),
+            ...(cor ? { cor } : {}),
+          },
         });
       }
     });
@@ -96,8 +103,7 @@ export async function updateUser(id: string, formData: FormData) {
 
 export async function toggleUserAtivo(id: string) {
   const session = await requireAdmin();
-  const currentUserId =
-    session.user.sub ?? (session.user as { id?: string }).id;
+  const currentUserId = session.user.id;
   if (currentUserId === id) {
     return { error: "Você não pode desativar sua própria conta." };
   }

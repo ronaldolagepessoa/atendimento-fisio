@@ -41,7 +41,7 @@ export default async function UsuariosPage() {
     userCount: r._count.usuarios,
   }));
 
-  const currentUserId = session?.user.sub ?? "";
+  const currentUserId = session?.user.id ?? "";
 
   return (
     <UsuariosClient

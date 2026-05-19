@@ -61,6 +61,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return token;
     },
     async session({ session, token }) {
+      session.user.id = token.sub ?? "";
       session.user.role = token.role ?? "FISIO";
       session.user.permissions = token.permissions ?? [];
       session.user.fisioId = token.fisioId;
