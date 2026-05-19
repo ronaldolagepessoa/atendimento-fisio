@@ -108,8 +108,12 @@ export async function toggleUserAtivo(id: string) {
     return { error: "Você não pode desativar sua própria conta." };
   }
 
-  const user = await prisma.user.findUnique({ where: { id } });
+  const user = await prisma.user.findUnique({
+    where: { id },
+    include: { role: { select: { nome: true } } },
+  });
   if (!user) return { error: "Usuário não encontrado." };
+  if (user.role.nome === "ADMIN") return { error: "Usuários ADMIN não podem ser desativados." };
 
   const novoAtivo = !user.ativo;
 
